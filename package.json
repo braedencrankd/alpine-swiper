@@ -1,0 +1,14 @@
+{
+  "name": "alpine-swiper",
+  "version": "1.0.0",
+  "description": "An AlpineJS plugin for using the SwiperJS with Alpine Directives",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Braeden Foster",
+  "license": "ISC",
+  "dependencies": {
+    "swiper": "^11.0.5"
+  }
+}

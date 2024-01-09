@@ -1,66 +1,40 @@
 import Swiper from "swiper";
-import {
-  Autoplay,
-  Navigation,
-  Pagination,
-  Controller,
-  EffectFade,
-} from "swiper/modules";
 import "swiper/css";
-import "swiper/css/autoplay";
-import "swiper/css/pagination";
-import "swiper/css/controller";
-import "swiper/css/effect-fade";
 
-const tailwindScreenSizes = {
-  sm: 640,
-  md: 768,
-  lg: 1024,
-  xl: 1280,
-  "2xl": 1536,
-};
-
-const unitModifiers = new Map([
-  ["autoplay", true],
-  ["loop", true],
-  ["cross-fade", true],
-  ["no-swiping", true],
-  ["slide-to-clicked-slide", true],
-  ["auto-height", true],
-]);
+import {
+  availableModules,
+  tailwindScreenSizes,
+  unitModifiers,
+  purifyJSON,
+  snakeCaseToCamelCase,
+  parseValue,
+} from "./utils";
 
 const directiveFunctions = new Map([
   ["control", setControllerOptions],
   ["sync", syncSliders],
   ["navigation", setupNavigationOptions],
-  ["sm", setupResponsiveOptions],
-  ["md", setupResponsiveOptions],
-  ["lg", setupResponsiveOptions],
-  ["xl", setupResponsiveOptions],
-  ["2xl", setupResponsiveOptions],
 ]);
 
 export default function (Alpine) {
   Alpine.directive(
     "swiper",
-    (el, { modifiers, value, expression }, { cleanup }) => {
+    (el, { modifiers, value, expression }, { cleanup, evaluate }) => {
       let swiper = null;
 
-      function init() {
+      const init = async () => {
         // We don't need to do anything if the value is a defined function for this directive
         if (isDirectiveFunction(value)) return;
-
-        Swiper.use([Autoplay, Pagination, Navigation, Controller, EffectFade]);
 
         el.classList.add("swiper");
 
         if (!el.hasAttribute("x-swiper:control")) {
-          createSwiper();
+          await createSwiper(expression);
           return;
         }
 
-        deferSwiperCreation();
-      }
+        await deferSwiperCreation();
+      };
 
       init();
 
@@ -71,18 +45,34 @@ export default function (Alpine) {
         }
       });
 
-      function deferSwiperCreation() {
-        window.addEventListener("swiper-created", function (event) {
+      async function deferSwiperCreation() {
+        window.addEventListener("swiper-created", async function (event) {
           // listen for the controlled swiper to be created
           if (
             event.detail.swiper.el.id === el.getAttribute("x-swiper:control")
           ) {
-            createSwiper();
+            await createSwiper();
           }
         });
       }
 
-      function createSwiper() {
+      /**
+       * Creates a Swiper instance with the given expression or modifier options.
+       * If the expression is provided, it will be used as the default options.
+       * Otherwise, the modifier options will be used if they exist.
+       * @param {string} expression - The expression to evaluate as options.
+       * @returns {Promise<void>} - A promise that resolves when the Swiper instance is created.
+       */
+      async function createSwiper(expression) {
+        // Use the expression as the default otherwise use the modifiers if they exist
+        const options =
+          expression !== ""
+            ? evaluate(expression)
+            : createModifierOptions(el, modifiers);
+
+        // Here we import any modules that are needed for the swiper
+        await importModules(options);
+
         swiper = new Swiper(el, {
           on: {
             init: function (swiper) {
@@ -100,40 +90,53 @@ export default function (Alpine) {
             el: el.querySelector(".swiper-scrollbar") ?? null,
           },
           loopAddBlackSlide: true,
-          ...createOptions(el, modifiers),
-        });
-
-        // find child element with .swiper-active-index then set the real index to it
-        const activeIndex = document.querySelector(".swiper-current-index");
-        if (activeIndex) {
-          activeIndex.textContent = (swiper.realIndex + 1)
-            .toString()
-            .padStart(2, "0");
-        }
-
-        const swiperChanged = new CustomEvent("swiper-changed", {
-          detail: {
-            swiper,
-          },
-        });
-
-        swiper.on("activeIndexChange", function () {
-          if (activeIndex) {
-            activeIndex.textContent = ((swiper.activeIndex % 4) + 1)
-              .toString()
-              .padStart(2, "0");
-          }
-          window.dispatchEvent(swiperChanged);
+          ...options,
         });
       }
     }
   );
 
+  /**
+   * Imports modules based on the provided options.
+   *
+   * @param {Object} options - The options object containing the modules to import.
+   * @returns {Promise<void>} - A promise that resolves when all modules are imported.
+   */
+  async function importModules(options) {
+    const modules = Object.keys(options).filter((option) =>
+      availableModules.has(option)
+    );
+
+    for (let module of modules) {
+      let { js, css, name } = await availableModules.get(module);
+
+      let moduleBundle = await js;
+
+      let swiperModule = moduleBundle[name];
+
+      Swiper.use([swiperModule]);
+
+      // Load the CSS if necessary
+      if (css) {
+        css.then((module) => {
+          module.default;
+        });
+      }
+    }
+  }
+
+  /**
+   * Checks if a given function name is a directive function.
+   *
+   * @param {string} functionName - The name of the function to check.
+   * @returns {boolean} - True if the function is a directive function, false otherwise.
+   */
   function isDirectiveFunction(functionName) {
     return directiveFunctions.has(functionName);
   }
 
-  /*
+  /**
+   * @param {HTMLElement} rootEl
    * @param {Array} modifiers
    * @returns object
    *
@@ -141,7 +144,7 @@ export default function (Alpine) {
    * pairing adjacent elements and processing them accordingly,
    * such as converting values to  numbers and organizing breakpoints.
    */
-  function createOptions(el, modifiers) {
+  function createModifierOptions(el, modifiers) {
     let unitOffset = 0;
 
     const pairedModifiers = modifiers.reduce((acc, modifier, index) => {
@@ -199,12 +202,6 @@ export default function (Alpine) {
           case "navigation":
             options = { ...options, ...fn(el.getAttribute(`x-swiper:${key}`)) };
             break;
-          case "sm" || "md" || "lg" || "xl" || "2xl":
-            options = {
-              ...options,
-              ...fn(el.getAttribute(`x-swiper:${key}`), key),
-            };
-            break;
           default:
             break;
         }
@@ -212,35 +209,6 @@ export default function (Alpine) {
     });
 
     return options;
-  }
-
-  function convertIfNumber(value) {
-    let number = !isNaN(value) ? Number(value) : value;
-    return number;
-  }
-
-  function snakeCaseToCamelCase(str) {
-    return str.replace(/([-_][a-z])/g, (group) =>
-      group.toUpperCase().replace("-", "").replace("_", "")
-    );
-  }
-
-  function parseValue(key, value) {
-    if (unitModifiers.has(key)) {
-      return unitModifiers.get(key);
-    }
-
-    if (value.includes("_")) {
-      return convertIfNumber(value.replace("_", "."));
-    }
-
-    if (key === "duration") {
-      // Support .duration.500ms && duration.500
-      let match = value.match(/([0-9]+)ms/);
-      if (match) return match[1];
-    }
-
-    return convertIfNumber(value);
   }
 }
 
@@ -265,18 +233,11 @@ function setControllerOptions(swiperId) {
   };
 }
 
-function setupResponsiveOptions(options, size) {
-  const breakpoints = purifyJSON(options);
-
-  return {
-    breakpoints: {
-      [tailwindScreenSizes[size]]: {
-        ...breakpoints,
-      },
-    },
-  };
-}
-
+/**
+ * Sets up navigation options for the Swiper component.
+ * @param {Object} options - The navigation options.
+ * @returns {Object} - The configured navigation options.
+ */
 function setupNavigationOptions(options) {
   const navigation = purifyJSON(options);
 
@@ -295,7 +256,6 @@ function setupNavigationOptions(options) {
  *
  * Syncs to sliders by responding to each others change events
  */
-
 function syncSliders(swiperId) {
   const swiperEl = document.querySelector(`#${swiperId}`);
 
@@ -304,13 +264,4 @@ function syncSliders(swiperId) {
   window.addEventListener("swiper-changed", function (event) {
     swiperEl.swiper.slideTo(event.detail.swiper.realIndex);
   });
-}
-
-function purifyJSON(json) {
-  return JSON.parse(
-    json
-      .replace(/([a-zA-Z0-9]+):/g, '"$1":') // Add quotes around keys
-      .replace(/:([a-zA-Z0-9]+)/g, ':"$1"') // Add quotes around text values
-      .replace(/'/g, '"') // Replace single quotes with double quotes
-  );
 }

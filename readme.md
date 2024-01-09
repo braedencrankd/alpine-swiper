@@ -24,11 +24,11 @@ An AlpineJS plugin to create a SwiperJS slider using the elegance alpine directi
 To install the "alpine-swiper" package, you can use npm, pnpm or yarn. Run the following command in your project directory:
 
 ```bash
-npm install alpine-swiper
+npm install @braedencrankd/alpine-swiper
 # or
-yarn add alpine-swiper
+yarn add @braedencrankd/alpine-swiper
 # or
-pnpm add alpine-swiper
+pnpm add @braedencrankd/alpine-swiper
 ```
 
 ## Setup

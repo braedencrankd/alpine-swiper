@@ -10,5 +10,6 @@
   "license": "ISC",
   "dependencies": {
     "swiper": "^11.0.5"
-  }
+  },
+  "repository": "https://github.com/braedencrankd/alpine-swiper"
 }

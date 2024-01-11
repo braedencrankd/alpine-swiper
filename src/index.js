@@ -20,6 +20,8 @@ export default function (Alpine) {
   Alpine.directive(
     "swiper",
     (el, { modifiers, value, expression }, { cleanup, evaluate }) => {
+      console.log("Initialised swiper directive");
+
       let swiper = null;
 
       const init = async () => {

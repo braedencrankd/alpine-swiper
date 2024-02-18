@@ -56,7 +56,16 @@ export const unitModifiers = new Map([
   ["no-swiping", true],
   ["slide-to-clicked-slide", true],
   ["auto-height", true],
+  ["equal-height", true],
 ]);
+
+export const customFunctions = new Map([["equalHeight", setEqualHeight]]);
+
+function setEqualHeight(swiper) {
+  let slides = swiper.slides;
+  let tallestSlide = Math.max(...slides.map((slide) => slide.offsetHeight));
+  slides.forEach((slide) => (slide.style.height = `${tallestSlide}px`));
+}
 
 /**
  * Parses a JSON string and purifies it by adding quotes around keys and text values,

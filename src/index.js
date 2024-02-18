@@ -8,6 +8,7 @@ import {
   purifyJSON,
   snakeCaseToCamelCase,
   parseValue,
+  customFunctions,
 } from "./utils";
 
 const directiveFunctions = new Map([
@@ -20,8 +21,6 @@ export default function (Alpine) {
   Alpine.directive(
     "swiper",
     (el, { modifiers, value, expression }, { cleanup, evaluate }) => {
-      console.log("Initialised swiper directive");
-
       let swiper = null;
 
       const init = async () => {
@@ -84,6 +83,14 @@ export default function (Alpine) {
                 },
               });
               window.dispatchEvent(swiperCreated);
+
+              // TODO: Handle custom functionality for the swiper
+              // loop over customFunctions map and run the function if it exists
+              customFunctions.forEach((fn, key) => {
+                if (options[key]) {
+                  fn(swiper);
+                }
+              });
             },
           },
 

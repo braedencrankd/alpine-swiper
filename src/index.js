@@ -212,7 +212,6 @@ export default function (Alpine) {
             options = { ...options, ...fn(el.getAttribute(`x-swiper:${key}`)) };
             break;
           case "autoplay":
-            console.log("autoplay");
             options = { ...options, ...fn(el.getAttribute(`x-swiper:${key}`)) };
             break;
           default:

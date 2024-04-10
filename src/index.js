@@ -199,7 +199,6 @@ export default function (Alpine) {
 
     // Check for any directive functions and run them
     directiveFunctions.forEach((fn, key) => {
-      console.log("key", key);
       if (el.hasAttribute(`x-swiper:${key}`)) {
         switch (key) {
           case "control":
@@ -257,10 +256,6 @@ function setupNavigationOptions(options) {
     navigation: {
       nextEl: navigation.nextEl ?? ".swiper-button-next",
       prevEl: navigation.prevEl ?? ".swiper-button-prev",
-      // add rest of the options
-      ...Object.keys(navigation).forEach(
-        (key) => key !== "nextEl" && key !== "prevEl"
-      ),
     },
   };
 }
@@ -273,14 +268,13 @@ function setupNavigationOptions(options) {
  */
 function setupAutoplayOptions(options) {
   const autoplay = purifyJSON(options);
+
+  console.log("autoplay", autoplay);
   return {
     autoplay: {
       delay: autoplay.delay ?? 5000,
       disableOnInteraction: autoplay.disableOnInteraction ?? false,
-      // add rest of the options
-      ...Object.keys(autoplay).forEach(
-        (key) => key !== "delay" && key !== "disableOnInteraction"
-      ),
+      pauseOnMouseEnter: autoplay.pauseOnMouseEnter ?? false,
     },
   };
 }

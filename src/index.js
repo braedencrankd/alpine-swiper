@@ -274,7 +274,6 @@ function setupNavigationOptions(options) {
  */
 function setupAutoplayOptions(options) {
   const autoplay = purifyJSON(options);
-
   return {
     autoplay: {
       delay: autoplay.delay ?? 5000,

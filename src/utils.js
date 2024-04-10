@@ -57,8 +57,6 @@ export const unitModifiers = new Map([
   ["slide-to-clicked-slide", true],
   ["auto-height", true],
   ["equal-height", true],
-  ["disable-on-interaction", true],
-  ["pause-on-mouse-enter", true],
 ]);
 
 export const customFunctions = new Map([["equalHeight", setEqualHeight]]);

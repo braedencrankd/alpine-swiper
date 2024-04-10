@@ -15,6 +15,7 @@ const directiveFunctions = new Map([
   ["control", setControllerOptions],
   ["sync", syncSliders],
   ["navigation", setupNavigationOptions],
+  ["autoplay", setupAutoplayOptions],
 ]);
 
 export default function (Alpine) {
@@ -84,8 +85,6 @@ export default function (Alpine) {
               });
               window.dispatchEvent(swiperCreated);
 
-              // TODO: Handle custom functionality for the swiper
-              // loop over customFunctions map and run the function if it exists
               customFunctions.forEach((fn, key) => {
                 if (options[key]) {
                   fn(swiper);
@@ -200,6 +199,7 @@ export default function (Alpine) {
 
     // Check for any directive functions and run them
     directiveFunctions.forEach((fn, key) => {
+      console.log("key", key);
       if (el.hasAttribute(`x-swiper:${key}`)) {
         switch (key) {
           case "control":
@@ -209,6 +209,10 @@ export default function (Alpine) {
             fn(el.getAttribute(`x-swiper:${key}`));
             break;
           case "navigation":
+            options = { ...options, ...fn(el.getAttribute(`x-swiper:${key}`)) };
+            break;
+          case "autoplay":
+            console.log("autoplay");
             options = { ...options, ...fn(el.getAttribute(`x-swiper:${key}`)) };
             break;
           default:
@@ -254,6 +258,31 @@ function setupNavigationOptions(options) {
     navigation: {
       nextEl: navigation.nextEl ?? ".swiper-button-next",
       prevEl: navigation.prevEl ?? ".swiper-button-prev",
+      // add rest of the options
+      ...Object.keys(navigation).forEach(
+        (key) => key !== "nextEl" && key !== "prevEl"
+      ),
+    },
+  };
+}
+
+/**
+ * Sets up autoplay options for the swiper.
+ *
+ * @param {Object} options - The autoplay options.
+ * @returns {Object} - The autoplay options object.
+ */
+function setupAutoplayOptions(options) {
+  const autoplay = purifyJSON(options);
+
+  return {
+    autoplay: {
+      delay: autoplay.delay ?? 5000,
+      disableOnInteraction: autoplay.disableOnInteraction ?? false,
+      // add rest of the options
+      ...Object.keys(autoplay).forEach(
+        (key) => key !== "delay" && key !== "disableOnInteraction"
+      ),
     },
   };
 }

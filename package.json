@@ -1,6 +1,6 @@
 {
   "name": "@braedencrankd/alpine-swiper",
-  "version": "0.1.9",
+  "version": "0.2.0",
   "description": "An AlpineJS plugin for using the SwiperJS with Alpine Directives",
   "main": "src/index.js",
   "scripts": {

@@ -1,6 +1,5 @@
 import Swiper from "swiper";
 import { Navigation, Autoplay, Pagination, EffectFade } from "swiper/modules";
-import "swiper/css";
 
 import {
   availableModules,

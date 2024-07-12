@@ -1,4 +1,5 @@
 import Swiper from "swiper";
+import { Navigation, Autoplay, Pagination, EffectFade } from "swiper/modules";
 import "swiper/css";
 
 import {
@@ -72,9 +73,6 @@ export default function (Alpine) {
             ? evaluate(expression)
             : createModifierOptions(el, modifiers);
 
-        // Here we import any modules that are needed for the swiper
-        await importModules(options);
-
         swiper = new Swiper(el, {
           on: {
             init: function (swiper) {
@@ -100,6 +98,8 @@ export default function (Alpine) {
           loopAddBlackSlide: true,
           ...options,
         });
+
+        Swiper.use([Navigation, Autoplay, Pagination, EffectFade]);
       }
     }
   );

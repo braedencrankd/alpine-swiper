@@ -1,5 +1,11 @@
 import Swiper from "swiper";
-import { Navigation, Autoplay, Pagination, EffectFade } from "swiper/modules";
+import {
+  Navigation,
+  Autoplay,
+  Pagination,
+  EffectFade,
+  Controller,
+} from "swiper/modules";
 
 import {
   availableModules,
@@ -17,6 +23,12 @@ const directiveFunctions = new Map([
   ["navigation", setupNavigationOptions],
   ["autoplay", setupAutoplayOptions],
 ]);
+
+import "swiper/css";
+import "swiper/css/autoplay";
+import "swiper/css/pagination";
+import "swiper/css/controller";
+import "swiper/css/effect-fade";
 
 export default function (Alpine) {
   Alpine.directive(
@@ -98,7 +110,7 @@ export default function (Alpine) {
           ...options,
         });
 
-        Swiper.use([Navigation, Autoplay, Pagination, EffectFade]);
+        Swiper.use([Navigation, Autoplay, Pagination, EffectFade, Controller]);
       }
     }
   );
